@@ -2232,6 +2232,14 @@ transformDistributedBy(ParseState *pstate,
 		return distributedBy;
 	}
 
+	/* Check master only policy */
+    if (distributedBy &&
+        (distributedBy->ptype == POLICYTYPE_ENTRY && distributedBy->keyCols == NIL))
+    {
+        distributedBy->numsegments = numsegments;
+        return distributedBy;
+    }
+
 	/* Check replicated policy */
 	if (distributedBy && distributedBy->ptype == POLICYTYPE_REPLICATED)
 	{
@@ -2902,8 +2910,7 @@ getPolicyForDistributedBy(DistributedBy *distributedBy, TupleDesc tupdesc)
 											   distributedBy->numsegments);;
 
 		case POLICYTYPE_ENTRY:
-			elog(ERROR, "unexpected entry distribution policy");
-			return NULL;
+            return createEntryPolicy();
 
 		case POLICYTYPE_REPLICATED:
 			return createReplicatedGpPolicy(distributedBy->numsegments);

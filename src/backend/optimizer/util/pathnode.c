@@ -4841,7 +4841,8 @@ create_minmaxagg_path(PlannerInfo *root,
 	if (mmaggregates == NIL)
 	{
 		locustype = CdbLocusType_General;
-		numsegments = getgpsegmentCount();
+		//numsegments = getgpsegmentCount();
+        CdbPathLocus_MakeEntry(&pathnode->path.locus);
 	}
 
 	/* we checked that all the child paths have compatible loci */

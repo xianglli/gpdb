@@ -825,7 +825,7 @@ static void check_expressions_in_partition_key(PartitionSpec *spec, core_yyscan_
 
 	NEWLINE NOCREATEEXTTABLE NOOVERCOMMIT
 
-	ORDERED OVERCOMMIT
+	ONLYMASTER ORDERED OVERCOMMIT
 
 	PARTITIONS PERCENT PERSISTENTLY PROTOCOL
 
@@ -5462,6 +5462,16 @@ DistributedBy:   DISTRIBUTED BY  '(' distributed_by_list ')'
 				distributedBy->keyCols = $4;
 				$$ = (Node *)distributedBy;
 			}
+
+			| DISTRIBUTED ONLYMASTER
+			{
+				DistributedBy *distributedBy = makeNode(DistributedBy);
+				distributedBy->ptype = POLICYTYPE_ENTRY;
+				distributedBy->numsegments = -1;
+				distributedBy->keyCols = NIL;
+				$$ = (Node *)distributedBy;
+			}
+
 			| DISTRIBUTED RANDOMLY
 			{
 				DistributedBy *distributedBy = makeNode(DistributedBy);
@@ -18042,6 +18052,7 @@ unreserved_keyword:
 			| OFF
 			| OIDS
 			| OLD
+			| ONLYMASTER /* GP */
 			| OPERATOR
 			| OPTION
 			| OPTIONS

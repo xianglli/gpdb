@@ -102,6 +102,15 @@ makeGpPolicy(GpPolicyType ptype, int nattrs, int numsegments)
 }
 
 /*
+ * createMasterOnlyPolicy -- Create a policy with master only distribution
+ */
+GpPolicy *
+createEntryPolicy(void)
+{
+    return makeGpPolicy(POLICYTYPE_ENTRY, 0, getgpsegmentCount());
+}
+
+/*
  * createReplicatedGpPolicy-- Create a policy with replicated distribution
  */
 GpPolicy *
@@ -462,6 +471,11 @@ GpPolicyFetch(Oid tbloid)
 					policy->opclasses[i] = distopclasses->values[i];
 				}
 				break;
+
+            case SYM_POLICYTYPE_ENTRY:
+                policy = createEntryPolicy();
+                break;
+
 			default:
 				ReleaseSysCache(gp_policy_tuple);
 				elog(ERROR, "unrecognized distribution policy type");	
@@ -496,8 +510,6 @@ GpPolicyStore(Oid tbloid, const GpPolicy *policy)
 	int			i;
 
 	/* Sanity check the policy and its opclasses before storing it. */
-	if (policy->ptype == POLICYTYPE_ENTRY)
-		elog(ERROR, "cannot store entry-type policy in gp_distribution_policy");
 	for (i = 0; i < policy->nattrs; i++)
 	{
 		if (policy->opclasses[i] == InvalidOid)
@@ -521,6 +533,12 @@ GpPolicyStore(Oid tbloid, const GpPolicy *policy)
 	{
 		values[1] = CharGetDatum(SYM_POLICYTYPE_REPLICATED);
 	}
+
+    else if (GpPolicyIsEntry(policy))
+    {
+        values[1] = CharGetDatum(SYM_POLICYTYPE_ENTRY);
+    }
+
 	else
 	{
 		/*
